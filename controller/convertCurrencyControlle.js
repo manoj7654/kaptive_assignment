@@ -1,22 +1,42 @@
+
 const axios = require('axios');
-const apiKey="695b50c8460d2f8c18490a02" 
+require('dotenv').config();
 
-  const convertCurrencyController=async(req,res)=>{
+const API_KEY = process.env.apiKey
+const BASE_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/`;
+
+
+async function getExchangeRate(fromCurrency, toCurrency) {
     try {
-        const { amount, from, to } = req.query;
-        if (!amount || !from || !to) {
-          return res.status(400).json({ error: 'Please provide amount, from currency, and to currency' });
+        console.log(`${BASE_URL}/${fromCurrency}`)
+        const response = await axios.get(`${BASE_URL}/${fromCurrency}`);
+        const rates = response.data.conversion_rates;
+        const rate = rates[toCurrency];
+        if (!rate) {
+            throw new Error(`Unable to get currency conversion rate for ${toCurrency}`);
         }
-    
-        const response = await axios.get(`https://v6.exchangeratesapi.io/latest?access_key=${apiKey}&amount=${amount}&from=${from}&to=${to}`);
-        const exchangeRate = response.data.rates[to];
-        const convertedAmount = amount * exchangeRate;
-    
-        res.json({ amount, from, to, exchangeRate, convertedAmount });
-      } catch (error) {
-        console.error('Error fetching exchange rate:', error);
-        res.status(500).json({ error: 'Failed to fetch exchange rate' });
-      }
-  }
+        return rate;
+    } catch (error) {
+        throw new Error(`Error fetching exchange rates: ${error.message}`);
+    }
+}
 
-module.exports = { convertCurrencyController };
+async function convertCurrency(req, res) {
+    const { from, to, amount } = req.query;
+    if (!from || !to || !amount) {
+        return res.status(400).json({ error: 'Please provide from, to, and amount ' });
+    }
+
+    try {
+        const rate = await getExchangeRate(from,to)
+        console.log(rate)
+        const convertedAmount = amount * rate;
+        res.json({ from, to, amount, convertedAmount });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = {
+    convertCurrency,
+};
