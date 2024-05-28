@@ -1,5 +1,6 @@
-# kaptive_assignment
+# Personal Finance Management System
 
+- The Personal Finance Management System is a comprehensive API for managing users, categories, budgets, transactions, and financial reports. It offers secure authentication, robust data handling, and currency conversion features to help users effectively track and manage their personal finances.
 
 
 ## Table of Contents
